@@ -37,6 +37,15 @@ const allTags = [
 ];
 
 const onlyReview = reviewsMetadata.map(record => record.reviewText);
-const reviewsWithTags = onlyReview.filter(rview => rview.toLowerCase().includes(...allTags));
+const reviewsWithTags = onlyReview
+  .map(rview => rview.toLowerCase().split('.'))
+  .map(descriptions => descriptions
+    .map(description => description.trim())
+    .filter(description => description.length > 0))
+  .map(descriptions => descriptions
+    .filter(description => description.includes(...allTags)))
+  .filter(descriptions => descriptions.length > 0)
+  .flat()
+  .join('\n');
 
-fs.writeFileSync('data.txt', reviewsWithTags.join('\n'));
+fs.writeFileSync('data.txt', reviewsWithTags);
