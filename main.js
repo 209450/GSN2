@@ -46,6 +46,37 @@ const reviewsWithTags = onlyReview
     .filter(description => description.includes(...allTags)))
   .filter(descriptions => descriptions.length > 0)
   .flat()
-  .join('\n');
 
-fs.writeFileSync('data.txt', reviewsWithTags);
+const createRegularCorpus = () => {
+  fs.writeFileSync('data.txt', reviewsWithTags.join('\n'));
+}
+
+const createSpacyCorpus = () => {
+  const tagReview = {};
+  for(const review of reviewsWithTags) {
+    allTags.forEach(tag => {
+      if(review.includes(tag)) {
+        if(tag in tagReview) {
+          tagReview[tag].push(review)
+        } else {
+          tagReview[tag] = [review];
+        }
+      }
+    })
+  }
+  
+  let spacy_corpus = `
+  categories:
+  - songs
+  conversations:
+  `;
+  for(const [tag, reviews] of Object.entries(tagReview)) {
+    spacy_corpus += `- - ${tag}\n`;
+    reviews.forEach(review => {
+      spacy_corpus += `  - ${review.replace(/[^\w\s]/gi, '')}\n`
+    });
+  }
+  fs.writeFileSync('song-tags-reviews.yml', spacy_corpus);
+}
+
+createRegularCorpus();
