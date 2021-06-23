@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import shutil
 from urllib import parse
+import json
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -13,6 +14,8 @@ def parse_args():
                         help="csv file", required=True)
     parser.add_argument("--artist_dir", action="store", dest="artist_dir",
                         help="directory with albums", required=True)
+    parser.add_argument("--query_params", action="store", dest="query_params",
+                        help="json file with query params", required=True)
 
     return parser.parse_args()
 
@@ -20,6 +23,8 @@ MUSIC_EXTENSIONS = ['.mp3','.mp4','.ogg','.wav']
 
 if __name__ == "__main__":
     args = parse_args()
+
+    # check input
 
     tags_file_path = Path(args.tags_file)
     assert tags_file_path.is_file()
@@ -30,6 +35,14 @@ if __name__ == "__main__":
 
     artist_dirs = Path(args.artist_dir)
     assert artist_dirs.is_dir()
+
+    query_params_path = Path(args.query_params)
+    assert query_params_path.is_file()
+
+    # query_params
+    query_params = {}
+    with open(query_params_path) as path:
+        query_params = json.load(path)
 
     # artist
     artist = artist_dirs.name.replace(" ", "+")
@@ -43,11 +56,18 @@ if __name__ == "__main__":
                 tracks.append(track_path.stem.replace(" ", "+"))
     
     # URLs
-    
+    urls = []
+    for track in tracks:
+        url = "&".join([
+            query_params["netloc"],
+            f"artist={artist}",
+            f"track={track}",
+            "api_key={key}".format(**query_params),
+            "format={format}".format(**query_params)
+        ])
+        urls.append(url)
 
     
-
-
     # tracks = [track for track in albums_dirs if track.suffix in MUSIC_EXTENSIONS]
     # print(albums_dirs)
 
